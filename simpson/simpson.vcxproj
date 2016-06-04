@@ -18,6 +18,14 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="functional.h" />
+    <ClInclude Include="simpson.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="simpson_main.cpp" />
+    <ClCompile Include="simpson.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D3AF4D39-ED93-4D77-B5AA-92365DB07768}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -141,8 +149,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
