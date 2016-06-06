@@ -19,8 +19,7 @@ namespace simpson {
         Tbb2 = 2,
         Cilk = 3,
         Ppl = 4, 
-        OpenMp = 5,
-        Mpi = 6
+        OpenMp = 5
     };
 }
 
