@@ -21,11 +21,11 @@
     <ClInclude Include="simpson.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="paralleltype.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="simpson.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="simpson_main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
