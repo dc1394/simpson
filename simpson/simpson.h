@@ -11,17 +11,20 @@
 #include "functional.h"
 #include "paralleltype.h"
 #include <cstdint>                  // for std::int32_t
-#include <functional>               // for std::plus            
-#include <tuple>                    // for std::tuple
+#include <functional>               // for std::plus
+#include <future>                   // for std::async, std::future
+#include <vector>                   // for std::vector
 #include <omp.h>                    // for pragma omp parallel for
 #include <ppl.h>                    // for concurrency::parallel_for
+#include <windows.h>                // for SYSTEM_INFO, GetSystemInfo
 #include <boost/mpl/int.hpp>        // for boost::mpl::int_
+#include <boost/range/numeric.hpp>  // for boost::accumulate
 #include <cilk/cilk.h>              // for cilk_for
 #include <cilk/reducer_opadd.h>     // for cilk::reducer_opadd
 #include <tbb/blocked_range.h>      // for tbb:blocked_range
 #include <tbb/combinable.h>         // for tbb::combinable
-#include <tbb/parallel_reduce.h>    // for tbb:parallel_reduce
 #include <tbb/parallel_for.h>       // for tbb::parallel_for
+#include <tbb/parallel_reduce.h>    // for tbb:parallel_reduce
 
 namespace simpson {
     //! A class.
@@ -114,6 +117,18 @@ namespace simpson {
 
         //! A private member function (template function).
         /*!
+            Simpsonの公式によって数値積分を実行する（std::asyncで並列化）
+            \param func 被積分関数
+            \param x1 積分の下端
+            \param x2 積分の上端
+            \param テンプレート部分特殊化用の引数
+            \return 積分値
+        */
+        template <typename FUNCTYPE>
+        double operator()(myfunctional::Functional<FUNCTYPE> const & func, double x1, double x2, boost::mpl::int_<static_cast<std::int32_t>(ParallelType::StdAsync)>) const;
+
+        //! A private member function (template function).
+        /*!
             Simpsonの公式によって数値積分を実行する（TBBで並列化）
             \param func 被積分関数
             \param x1 積分の下端
@@ -142,7 +157,7 @@ namespace simpson {
 
         //! A private member variable (constant).
         /*!
-            simpsonの公式の分点
+            simpsonの公式の積分点
         */
         std::int32_t const n_;
 
@@ -242,6 +257,46 @@ namespace simpson {
         });
 
         return sum.combine(std::plus<double>()) * dh / 3.0;
+    }
+
+    template <typename FUNCTYPE>
+    double Simpson::operator()(myfunctional::Functional<FUNCTYPE> const & func, double x1, double x2, boost::mpl::int_<static_cast<std::int32_t>(ParallelType::StdAsync)>) const
+    {
+        SYSTEM_INFO info;
+        ::GetSystemInfo(&info);
+        auto const numthreads = static_cast<std::int32_t>(info.dwNumberOfProcessors);
+
+        std::vector<std::future<double>> future(numthreads);
+
+        for (auto i = 0; i < numthreads; i++) {
+            future[i] = std::async(
+                std::launch::async,
+                [&func](std::int32_t n, double x1, double x2) {
+                    auto const dh = (x2 - x1) / static_cast<double>(n);
+                    auto sum = 0.0;
+
+                    for (auto i = 0; i < n; i += 2) {
+                        auto const f0 = func(x1 + static_cast<double>(i) * dh);
+                        auto const f1 = func(x1 + static_cast<double>(i + 1) * dh);
+                        auto const f2 = func(x1 + static_cast<double>(i + 2) * dh);
+                        sum += (f0 + 4.0 * f1 + f2);
+                    }
+
+                    return sum;
+            },
+            n_ / numthreads,
+            x1 + (x2 - x1) / static_cast<double>(numthreads) * static_cast<double>(i),
+            x1 + (x2 - x1) / static_cast<double>(numthreads) * static_cast<double>(i + 1));
+        }
+
+        std::vector<double> result;
+        result.reserve(numthreads);
+
+        for (auto && f : future) {
+            result.push_back(f.get());
+        }
+
+        return boost::accumulate(result, 0.0) * (x2 - x1) / static_cast<double>(n_) / 3.0;
     }
 
     template <typename FUNCTYPE>
