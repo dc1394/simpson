@@ -268,25 +268,35 @@ namespace simpson {
 
         std::vector<std::future<double>> future(numthreads);
 
+        auto const nmax = n_ / 2;
+        auto const dh = (x2 - x1) / static_cast<double>(n_);
         for (auto i = 0; i < numthreads; i++) {
+            std::int32_t localnmax;
+            if (i == numthreads - 1) {
+                localnmax = nmax;
+            }
+            else {
+                localnmax = nmax / numthreads * (i + 1);
+            }
+
+            auto const localnmin = nmax / numthreads * i;
+            
             future[i] = std::async(
                 std::launch::async,
-                [&func](std::int32_t n, double x1, double x2) {
-                    auto const dh = (x2 - x1) / static_cast<double>(n);
+                [dh, &func, x1](std::int32_t nmin, std::int32_t nmax) {
                     auto sum = 0.0;
 
-                    for (auto i = 0; i < n; i += 2) {
-                        auto const f0 = func(x1 + static_cast<double>(i) * dh);
-                        auto const f1 = func(x1 + static_cast<double>(i + 1) * dh);
-                        auto const f2 = func(x1 + static_cast<double>(i + 2) * dh);
+                    for (auto i = nmin; i < nmax; i++) {
+                        auto const f0 = func(x1 + static_cast<double>(2 * i) * dh);
+                        auto const f1 = func(x1 + static_cast<double>(2 * i + 1) * dh);
+                        auto const f2 = func(x1 + static_cast<double>(2 * i + 2) * dh);
                         sum += (f0 + 4.0 * f1 + f2);
                     }
 
                     return sum;
-            },
-            n_ / numthreads,
-            x1 + (x2 - x1) / static_cast<double>(numthreads) * static_cast<double>(i),
-            x1 + (x2 - x1) / static_cast<double>(numthreads) * static_cast<double>(i + 1));
+                },
+                localnmin,
+                localnmax);
         }
 
         std::vector<double> result;
@@ -296,7 +306,7 @@ namespace simpson {
             result.push_back(f.get());
         }
 
-        return boost::accumulate(result, 0.0) * (x2 - x1) / static_cast<double>(n_) / 3.0;
+        return boost::accumulate(result, 0.0) * dh / 3.0;
     }
 
     template <typename FUNCTYPE>
