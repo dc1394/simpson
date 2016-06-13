@@ -31,19 +31,24 @@ namespace simpson {
     /*!
         simpsonの公式で数値積分を行うクラス
     */
-	class Simpson final
-	{
-    public:
-        // #region コンストラクタ
+	class Simpson final {
+        // #region コンストラクタ・デストラクタ
 
+    public:
         //! A constructor.
         /*!
             唯一のコンストラクタ
             \param n simpsonの公式の分点
         */
-        Simpson::Simpson(std::int32_t n) : n_(n) {}
+        Simpson(std::int32_t n) : n_(n) {}
 
-        // #endregion コンストラクタ
+        //! A destructor.
+        /*!
+            デフォルトデストラクタ
+        */
+        ~Simpson() = default;
+
+        // #endregion コンストラクタ・デストラクタ
 
         // #region publicメンバ関数
 
@@ -63,10 +68,9 @@ namespace simpson {
 
         // #endregion publicメンバ関数
 
-    private:
-
         // #region privateメンバ関数
 
+    private:
         //! A private member function (template function).
         /*!
             Simpsonの公式によって数値積分を実行する（Cilkで並列化）
@@ -357,4 +361,3 @@ namespace simpson {
 }
 
 #endif  // _SIMPSON_H_
-
