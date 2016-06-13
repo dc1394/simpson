@@ -1,5 +1,5 @@
 ﻿#include "checkpoint.h"
-#include "simpson.h"
+#include "simpson_integral.h"
 #include <array>        // for std::array
 #include <cmath>        // for std::sqrt
 #include <iomanip>      // for std::setprecision
@@ -15,36 +15,36 @@ int main()
     checkpoint::CheckPoint cp;
 
     auto const func = myfunctional::make_functional([](double x) { return 1.0 / (2.0 * std::sqrt(x)); });
-	simpson::Simpson s(N);
+	simpson::Simpson<decltype(func)> s(func, N, 1.0, 4.0);
     std::array<double, 7> res{};
 
     cp.checkpoint("処理開始", __LINE__);
 
-    res[0] = s.simpson<decltype(func), simpson::ParallelType::NoParallel>(func, 1.0, 4.0);
+    res[0] = s.simpson<simpson::ParallelType::NoParallel>();
 
     cp.checkpoint("並列化無し", __LINE__);
 
-    res[1] = s.simpson<decltype(func), simpson::ParallelType::StdAsync>(func, 1.0, 4.0);
+    res[1] = s.simpson<simpson::ParallelType::StdAsync>();
 
     cp.checkpoint("std::asyncで並列化", __LINE__);
     
-    res[2] = s.simpson<decltype(func), simpson::ParallelType::Tbb>(func, 1.0, 4.0);
+    res[2] = s.simpson<simpson::ParallelType::Tbb>();
 
     cp.checkpoint("TBBで並列化", __LINE__);
 
-    res[3] = s.simpson<decltype(func), simpson::ParallelType::Tbb2>(func, 1.0, 4.0);
+    res[3] = s.simpson<simpson::ParallelType::Tbb2>();
 
     cp.checkpoint("TBBで並列化2", __LINE__);
 
-    res[4] = s.simpson<decltype(func), simpson::ParallelType::Ppl>(func, 1.0, 4.0);
+    res[4] = s.simpson<simpson::ParallelType::Ppl>();
 
     cp.checkpoint("PPLで並列化", __LINE__);
     
-    res[5] = s.simpson<decltype(func), simpson::ParallelType::Cilk>(func, 1.0, 4.0);
+    res[5] = s.simpson<simpson::ParallelType::Cilk>();
 
     cp.checkpoint("Cilkで並列化", __LINE__);
 
-    res[6] = s.simpson<decltype(func), simpson::ParallelType::OpenMp>(func, 1.0, 4.0);
+    res[6] = s.simpson<simpson::ParallelType::OpenMp>();
 
     cp.checkpoint("OpenMPで並列化", __LINE__);
         

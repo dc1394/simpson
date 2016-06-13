@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="functional.h" />
     <ClInclude Include="paralleltype.h" />
-    <ClInclude Include="simpson.h" />
+    <ClInclude Include="simpson_integral.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="simpson_main.cpp" />
