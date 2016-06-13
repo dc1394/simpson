@@ -84,7 +84,6 @@ namespace simpson {
         //! A private member function (template function).
         /*!
             Simpsonの公式によって数値積分を実行する（並列化なし）
-            \param func_ 被積分関数
             \param テンプレート部分特殊化用の引数
             \return 積分値
         */
