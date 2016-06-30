@@ -10,13 +10,14 @@
 
 #include "functional.h"
 #include "paralleltype.h"
+#include <algorithm>                // for std::max
 #include <cstdint>                  // for std::int32_t
 #include <functional>               // for std::plus
 #include <future>                   // for std::async, std::future
+#include <thread>                   // for std::thread::hardware_concurrency
 #include <vector>                   // for std::vector
 #include <omp.h>                    // for pragma omp parallel for
 #include <ppl.h>                    // for concurrency::parallel_for
-#include <windows.h>                // for SYSTEM_INFO, GetSystemInfo
 #include <boost/mpl/int.hpp>        // for boost::mpl::int_
 #include <boost/range/numeric.hpp>  // for boost::accumulate
 #include <cilk/cilk.h>              // for cilk_for
@@ -254,9 +255,7 @@ namespace simpson {
     template <typename FUNCTYPE>
     double Simpson<FUNCTYPE>::operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::StdAsync)>) const
     {
-        SYSTEM_INFO info;
-        ::GetSystemInfo(&info);
-        auto const numthreads = static_cast<std::int32_t>(info.dwNumberOfProcessors);
+        auto const numthreads = static_cast<std::int32_t>((std::max)(std::thread::hardware_concurrency(), 1u));
 
         std::vector<std::future<double>> future(numthreads);
 
