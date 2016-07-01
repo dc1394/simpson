@@ -10,7 +10,7 @@
 
 #include "functional.h"
 #include "paralleltype.h"
-#include <algorithm>                // for std::max
+#include <algorithm>                // for std::max, std::accumulate
 #include <cstdint>                  // for std::int32_t
 #include <functional>               // for std::plus
 #include <future>                   // for std::async, std::future
@@ -19,7 +19,6 @@
 #include <omp.h>                    // for pragma omp parallel for
 #include <ppl.h>                    // for concurrency::parallel_for
 #include <boost/mpl/int.hpp>        // for boost::mpl::int_
-#include <boost/range/numeric.hpp>  // for boost::accumulate
 #include <cilk/cilk.h>              // for cilk_for
 #include <cilk/reducer_opadd.h>     // for cilk::reducer_opadd
 #include <tbb/blocked_range.h>      // for tbb:blocked_range
@@ -277,9 +276,9 @@ namespace simpson {
                     auto sum = 0.0;
 
                     for (auto i = nmin; i < nmax; i++) {
-                        auto const f0 = func_(x1_ + static_cast<double>(2 * i) * dh_);
-                        auto const f1 = func_(x1_ + static_cast<double>(2 * i + 1) * dh_);
-                        auto const f2 = func_(x1_ + static_cast<double>(2 * i + 2) * dh_);
+                        auto const f0 = func_(x1_ + static_cast<double>(i * 2) * dh_);
+                        auto const f1 = func_(x1_ + static_cast<double>(i * 2 + 1) * dh_);
+                        auto const f2 = func_(x1_ + static_cast<double>(i * 2 + 2) * dh_);
                         sum += (f0 + 4.0 * f1 + f2);
                     }
 
@@ -296,7 +295,7 @@ namespace simpson {
             result.push_back(f.get());
         }
 
-        return boost::accumulate(result, 0.0) * dh_ / 3.0;
+        return std::accumulate(result.begin(), result.end(), 0.0) * dh_ / 3.0;
     }
 
     template <typename FUNCTYPE>
