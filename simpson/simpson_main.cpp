@@ -47,7 +47,9 @@ int main()
     res[6] = s.simpson<simpson::ParallelType::OpenMp>();
 
     cp.checkpoint("OpenMPで並列化", __LINE__);
-        
+    
+    std::cout << "積分点: " << N << '\n';
+
     cp.checkpoint_print();
     checkpoint::usedmem();
 
