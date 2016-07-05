@@ -10,10 +10,11 @@
 
 #include "functional.h"
 #include "paralleltype.h"
-#include <algorithm>                // for std::max, std::accumulate
+#include <algorithm>                // for std::max, std::transform
 #include <cstdint>                  // for std::int32_t
 #include <functional>               // for std::plus
 #include <future>                   // for std::async, std::future
+#include <numeric>                  // for std::accumulate
 #include <thread>                   // for std::thread::hardware_concurrency
 #include <vector>                   // for std::vector
 #include <omp.h>                    // for pragma omp parallel for
@@ -201,7 +202,7 @@ namespace simpson {
 
         return sum.get_value() * dh_ / 3.0;
     }
-    
+
     template <typename FUNCTYPE>
     double Simpson<FUNCTYPE>::operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::NoParallel)>) const
     {
@@ -255,7 +256,6 @@ namespace simpson {
     double Simpson<FUNCTYPE>::operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::StdAsync)>) const
     {
         auto const numthreads = static_cast<std::int32_t>((std::max)(std::thread::hardware_concurrency(), 1u));
-
         std::vector<std::future<double>> future(numthreads);
 
         auto const nmax = n_ / 2;
@@ -269,10 +269,10 @@ namespace simpson {
             }
 
             auto const localnmin = nmax / numthreads * i;
-            
+
             future[i] = std::async(
                 std::launch::async,
-                [this](std::int32_t nmin, std::int32_t nmax) {
+                [this](auto nmin, auto nmax) {
                     auto sum = 0.0;
 
                     for (auto i = nmin; i < nmax; i++) {
@@ -287,14 +287,10 @@ namespace simpson {
                 localnmin,
                 localnmax);
         }
+        
+        std::vector<double> result(numthreads);
 
-        std::vector<double> result;
-        result.reserve(numthreads);
-
-        for (auto && f : future) {
-            result.push_back(f.get());
-        }
-
+        std::transform(future.begin(), future.end(), result.begin(), [](auto && f) { return f.get(); });
         return std::accumulate(result.begin(), result.end(), 0.0) * dh_ / 3.0;
     }
 

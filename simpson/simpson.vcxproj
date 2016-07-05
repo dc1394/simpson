@@ -163,6 +163,8 @@
       <AdditionalIncludeDirectories>D:\DATA\PROGRAM\C++\simpson\checkpoint;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMP>GenerateParallelCode</OpenMP>
+      <GenerateAlternateCodePaths>AVX</GenerateAlternateCodePaths>
+      <UseProcessorExtensions>AVX</UseProcessorExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
