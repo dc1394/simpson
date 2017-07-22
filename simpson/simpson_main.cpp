@@ -7,7 +7,7 @@
 
 namespace {
     static auto constexpr DIGIT = 15U;
-    static auto constexpr N = 100000000;
+    static auto constexpr N = 1000000000;
 }
 
 int main()

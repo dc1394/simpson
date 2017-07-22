@@ -14,8 +14,8 @@
 #include <cstdint>                  // for std::int32_t
 #include <functional>               // for std::plus
 #include <future>                   // for std::async, std::future
-#include <numeric>                  // for std::accumulate
 #include <thread>                   // for std::thread::hardware_concurrency
+#include <valarray>					// for std::valarray
 #include <vector>                   // for std::vector
 #include <omp.h>                    // for pragma omp parallel for
 #include <ppl.h>                    // for concurrency::parallel_for
@@ -288,10 +288,10 @@ namespace simpson {
                 localnmax);
         }
         
-        std::vector<double> result(numthreads);
+        std::valarray<double> result(numthreads);
 
-        std::transform(future.begin(), future.end(), result.begin(), [](auto && f) { return f.get(); });
-        return std::accumulate(result.begin(), result.end(), 0.0) * dh_ / 3.0;
+        std::transform(future.begin(), future.end(), std::begin(result), [](auto && f) { return f.get(); });
+        return result.sum() * dh_ / 3.0;
     }
 
     template <typename FUNCTYPE>
