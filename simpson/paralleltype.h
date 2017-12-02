@@ -15,12 +15,13 @@
 namespace simpson {
     enum class ParallelType : std::int32_t {
         Cilk = 1,
-        NoParallel = 2,
-        OpenMp = 3,
-        Ppl = 4,
-        StdAsync = 5,
-        Tbb = 6,
-        Tbb2 = 7,
+		CPP17 = 2,
+        NoParallel = 3,
+        OpenMp = 4,
+        Ppl = 5,
+        StdAsync = 6,
+        Tbb = 7,
+        Tbb2 = 8
     };
 }
 

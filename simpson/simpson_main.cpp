@@ -16,7 +16,7 @@ int main()
 
     auto const func = myfunctional::make_functional([](double x) { return 1.0 / (2.0 * std::sqrt(x)); });
 	simpson::Simpson<decltype(func)> s(func, N, 1.0, 4.0);
-    std::array<double, 7> res{};
+    std::array<double, 8> res{};
 
     cp.checkpoint("処理開始", __LINE__);
 
@@ -44,7 +44,11 @@ int main()
 
     cp.checkpoint("Cilkで並列化", __LINE__);
 
-    res[6] = s.simpson<simpson::ParallelType::OpenMp>();
+	res[6] = s.simpson<simpson::ParallelType::CPP17>();
+
+	cp.checkpoint("C++17 Parallelism TSで並列化", __LINE__);
+
+    res[7] = s.simpson<simpson::ParallelType::OpenMp>();
 
     cp.checkpoint("OpenMPで並列化", __LINE__);
     
@@ -60,7 +64,8 @@ int main()
     std::cout << "TBBで並列化2：\t" << std::setprecision(DIGIT) << res[3] << '\n';
     std::cout << "PPLで並列化：\t" << std::setprecision(DIGIT) << res[4] << '\n';
     std::cout << "Cilkで並列化：\t" << std::setprecision(DIGIT) << res[5] << '\n';
-    std::cout << "OpenMPで並列化：" << std::setprecision(DIGIT) << res[6] << '\n';
+	std::cout << "C++17 Parallelism TSで並列化：" << std::setprecision(DIGIT) << res[6] << '\n';
+	std::cout << "OpenMPで並列化：" << std::setprecision(DIGIT) << res[7] << '\n';
 
 	return 0;
 }

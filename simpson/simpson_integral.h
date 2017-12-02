@@ -1,7 +1,7 @@
 ﻿/*! \file simpson_integral.h
     \brief simpsonの公式で数値積分を行うクラスの宣言と実装
 
-    Copyright ©  2016 @dc1394 All Rights Reserved.
+    Copyright ©  2016-2017 @dc1394 All Rights Reserved.
 */
 #ifndef _SIMPSON_INTEGRAL_H_
 #define _SIMPSON_INTEGRAL_H_
@@ -16,10 +16,13 @@
 #include <future>                   // for std::async, std::future
 #include <thread>                   // for std::thread::hardware_concurrency
 #include <valarray>					// for std::valarray
-#include <vector>                   // for std::vector
+#include <vector>					// for std::vector
 #include <omp.h>                    // for pragma omp parallel for
 #include <ppl.h>                    // for concurrency::parallel_for
+#include <pstl/execution>			// for std::execution::par_unseq
+#include <pstl/numeric>				// for std::transform_reduce
 #include <boost/mpl/int.hpp>        // for boost::mpl::int_
+#include <boost/range/irange.hpp>	// for boost::irange
 #include <cilk/cilk.h>              // for cilk_for
 #include <cilk/reducer_opadd.h>     // for cilk::reducer_opadd
 #include <tbb/blocked_range.h>      // for tbb:blocked_range
@@ -81,6 +84,14 @@ namespace simpson {
             \return 積分値
         */
         double operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::Cilk)>) const;
+
+		//! A private member function (template function).
+		/*!
+			Simpsonの公式によって数値積分を実行する（C++17 Parallel Algrithmで並列化）
+			\param テンプレート部分特殊化用の引数
+			\return 積分値
+		*/
+		double operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::CPP17)>) const;
 
         //! A private member function (template function).
         /*!
@@ -203,6 +214,28 @@ namespace simpson {
         return sum.get_value() * dh_ / 3.0;
     }
 
+	template <typename FUNCTYPE>
+	double Simpson<FUNCTYPE>::operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::CPP17)>) const
+	{
+		auto const range = boost::irange<std::int32_t>(0, n_ / 2);
+
+		auto const res = std::transform_reduce(
+			std::execution::par_unseq,
+			range.begin(),
+			range.end(),
+			0.0,
+			std::plus<double>(),
+			[this](auto const i) {
+				auto const f0 = func_(x1_ + static_cast<double>(i * 2) * dh_);
+				auto const f1 = func_(x1_ + static_cast<double>(i * 2 + 1) * dh_);
+				auto const f2 = func_(x1_ + static_cast<double>(i * 2 + 2) * dh_);
+				return f0 + 4.0 * f1 + f2;
+			}
+		);
+
+		return res * dh_ / 3.0;
+	}
+
     template <typename FUNCTYPE>
     double Simpson<FUNCTYPE>::operator()(boost::mpl::int_<static_cast<std::int32_t>(ParallelType::NoParallel)>) const
     {
@@ -242,7 +275,7 @@ namespace simpson {
         concurrency::parallel_for<std::int32_t>(
             0,
             n_ / 2,
-            [&](auto i) {
+            [&](auto const i) {
                 auto const f0 = func_(x1_ + static_cast<double>(i * 2) * dh_);
                 auto const f1 = func_(x1_ + static_cast<double>(i * 2 + 1) * dh_);
                 auto const f2 = func_(x1_ + static_cast<double>(i * 2 + 2) * dh_);
